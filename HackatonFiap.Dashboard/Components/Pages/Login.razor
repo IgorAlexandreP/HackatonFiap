@@ -1,0 +1,50 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+@using HackatonFiap.Dashboard.Providers
+@using HackatonFiap.Dashboard.Servicos
+@inject IdentidadeService IdentidadeService
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject SessaoUsuario Sessao
+@inject NavigationManager Navegacao
+@rendermode InteractiveServer
+
+<h3>Login do Produtor</h3>
+
+<div class="mb-3">
+    <label>Email</label>
+    <input @bind="Email" class="form-control" />
+</div>
+<div class="mb-3">
+    <label>Senha</label>
+    <input @bind="Senha" type="password" class="form-control" />
+</div>
+<button @onclick="FazerLogin" class="btn btn-primary">Entrar</button>
+
+@if (!string.IsNullOrEmpty(MensagemErro))
+{
+    <div class="alert alert-danger mt-3">@MensagemErro</div>
+}
+
+@code {
+    private string Email { get; set; } = "admin@agro.com";
+    private string Senha { get; set; } = "admin123";
+    private string MensagemErro { get; set; } = string.Empty;
+
+    private async Task FazerLogin()
+    {
+        var sucesso = await IdentidadeService.Login(Email, Senha);
+        if (sucesso)
+        {
+            if (!string.IsNullOrEmpty(Sessao.Token))
+            {
+                AuthProvider.NotifyUserAuthentication(Sessao.Token);
+                Navegacao.NavigateTo("/propriedades");
+            }
+        }
+        else
+        {
+            MensagemErro = "Credenciais inválidas.";
+        }
+    }
+}

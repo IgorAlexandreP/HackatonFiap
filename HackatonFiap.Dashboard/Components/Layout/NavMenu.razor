@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using HackatonFiap.Dashboard.Providers
+@using HackatonFiap.Dashboard.Servicos
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject SessaoUsuario Sessao
+@inject NavigationManager Navegacao
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">AgroSolutions</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        
+        <AuthorizeView>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="propriedades">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Propriedades
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="monitoramento">
+                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Monitoramento
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <button class="nav-link btn btn-link" @onclick="Logout">
+                        <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Sair
+                    </button>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private void Logout()
+    {
+        Sessao.Token = null;
+        AuthProvider.NotifyUserLogout();
+        Navegacao.NavigateTo("/");
+    }
+}

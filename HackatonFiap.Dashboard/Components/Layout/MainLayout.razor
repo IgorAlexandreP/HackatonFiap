@@ -1,0 +1,46 @@
+@inherits LayoutComponentBase
+@using HackatonFiap.Dashboard.Providers
+@using HackatonFiap.Dashboard.Servicos
+@using Microsoft.AspNetCore.Components.Authorization
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject SessaoUsuario Sessao
+@inject NavigationManager Navegacao
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <AuthorizeView>
+                <Authorized>
+                    <span class="me-3">Olá, Produtor!</span>
+                    <button class="btn btn-link" @onclick="Logout">Sair</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login">Login</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ocorreu um erro não tratado.
+    <a href="" class="reload">Recarregar</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private void Logout()
+    {
+        Sessao.Token = null;
+        AuthProvider.NotifyUserLogout();
+        Navegacao.NavigateTo("/");
+    }
+}

@@ -1,0 +1,110 @@
+@page "/monitoramento"
+@using HackatonFiap.Dashboard.Servicos
+@using HackatonFiap.Compartilhado
+@inject AnaliseService AnaliseService
+@inject IngestaoService IngestaoService
+@rendermode InteractiveServer
+
+<h3>Monitoramento e Alertas</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Simular Leitura de Sensor</h4>
+
+        @if (!string.IsNullOrEmpty(MensagemFeedback))
+        {
+            <div class="alert @ClasseFeedback" role="alert">
+                @MensagemFeedback
+            </div>
+        }
+
+        <div class="mb-2">
+            <label>ID do Talhão</label>
+            <input @bind="TalhaoId" type="number" class="form-control" />
+        </div>
+        <div class="mb-2">
+            <label>Umidade (%)</label>
+            <input @bind="Umidade" type="number" class="form-control" />
+        </div>
+        <button @onclick="SimularLeitura" class="btn btn-warning" disabled="@IsLoading">
+            @if (IsLoading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Enviando...</span>
+            }
+            else
+            {
+                <span>Enviar Leitura</span>
+            }
+        </button>
+    </div>
+    
+    <div class="col-md-6">
+        <h4>Alertas Recentes</h4>
+        <button @onclick="CarregarAlertas" class="btn btn-sm btn-info mb-2">Atualizar</button>
+        <ul class="list-group">
+            @foreach (var alerta in Alertas)
+            {
+                <li class="list-group-item list-group-item-danger">
+                    <strong>@alerta.Nivel</strong>: @alerta.Mensagem (Talhão: @alerta.TalhaoId) - @alerta.DataAlerta
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    private int TalhaoId { get; set; }
+    private double Umidade { get; set; }
+    private List<AlertaDTO> Alertas { get; set; } = new();
+
+    private string MensagemFeedback { get; set; } = string.Empty;
+    private string ClasseFeedback { get; set; } = "alert-info";
+    private bool IsLoading { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAlertas();
+    }
+
+    private async Task SimularLeitura()
+    {
+        try
+        {
+            IsLoading = true;
+            MensagemFeedback = string.Empty;
+
+            var leitura = new LeituraSensorDTO
+            {
+                TalhaoId = TalhaoId,
+                Umidade = Umidade,
+                Temperatura = 25, // Fixo para demo
+                Precipitacao = 0,
+                DataLeitura = DateTime.UtcNow
+            };
+            
+            await IngestaoService.EnviarLeitura(leitura);
+            
+            MensagemFeedback = "Leitura enviada com sucesso!";
+            ClasseFeedback = "alert-success";
+
+            // Aguarda um pouco para o processamento assíncrono antes de tentar atualizar
+            await Task.Delay(1000);
+            await CarregarAlertas();
+        }
+        catch (Exception ex)
+        {
+            MensagemFeedback = $"Erro ao enviar leitura: {ex.Message}";
+            ClasseFeedback = "alert-danger";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CarregarAlertas()
+    {
+        Alertas = await AnaliseService.ObterAlertas();
+    }
+}

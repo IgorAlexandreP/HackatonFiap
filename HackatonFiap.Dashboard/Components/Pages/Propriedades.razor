@@ -1,0 +1,141 @@
+@page "/propriedades"
+@using HackatonFiap.Dashboard.Servicos
+@using HackatonFiap.Compartilhado
+@inject PropriedadesService PropriedadesService
+@rendermode InteractiveServer
+
+<h3>Minhas Propriedades</h3>
+
+@if (!string.IsNullOrEmpty(Mensagem))
+{
+    <div class="alert alert-info">@Mensagem</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Nova Propriedade</h4>
+        <input @bind="NovaPropriedade.Nome" placeholder="Nome" class="form-control mb-2" />
+        <input @bind="NovaPropriedade.Endereco" placeholder="Endereço" class="form-control mb-2" />
+        <button @onclick="CriarPropriedade" class="btn btn-success">Cadastrar</button>
+    </div>
+</div>
+
+<hr />
+
+@if (ListaPropriedades == null)
+{
+    <p>Carregando...</p>
+}
+else if (!ListaPropriedades.Any())
+{
+    <p>Nenhuma propriedade cadastrada.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var prop in ListaPropriedades)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@prop.Nome</h5>
+                        <p class="card-text">@prop.Endereco</p>
+                        <h6>Talhões:</h6>
+                        @if (prop.Talhoes != null && prop.Talhoes.Any())
+                        {
+                            <ul>
+                                @foreach (var talhao in prop.Talhoes)
+                                {
+                                    <li>ID: @talhao.Id - @talhao.Cultura (@talhao.Area ha)</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Sem talhões.</p>
+                        }
+                        
+                        <div class="mt-2">
+                            <h6>Novo Talhão</h6>
+                            @if (NovoTalhaoCultura.ContainsKey(prop.Id) && NovoTalhaoArea.ContainsKey(prop.Id))
+                            {
+                                <input @bind="NovoTalhaoCultura[prop.Id]" placeholder="Cultura" class="form-control mb-1" />
+                                <input @bind="NovoTalhaoArea[prop.Id]" placeholder="Área" type="number" class="form-control mb-1" />
+                            }
+                            <button @onclick="() => AdicionarTalhao(prop.Id)" class="btn btn-sm btn-primary">Adicionar Talhão</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<PropriedadeDTO> ListaPropriedades { get; set; } = new();
+    private PropriedadeDTO NovaPropriedade { get; set; } = new();
+    private Dictionary<int, string> NovoTalhaoCultura { get; set; } = new();
+    private Dictionary<int, decimal> NovoTalhaoArea { get; set; } = new();
+    private string Mensagem { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarPropriedades();
+    }
+
+    private async Task CarregarPropriedades()
+    {
+        try
+        {
+            ListaPropriedades = await PropriedadesService.ObterTodas();
+            foreach(var p in ListaPropriedades)
+            {
+                if(!NovoTalhaoCultura.ContainsKey(p.Id)) NovoTalhaoCultura[p.Id] = "";
+                if(!NovoTalhaoArea.ContainsKey(p.Id)) NovoTalhaoArea[p.Id] = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Mensagem = "Erro ao carregar propriedades: " + ex.Message;
+        }
+    }
+
+    private async Task CriarPropriedade()
+    {
+        try
+        {
+            await PropriedadesService.Criar(NovaPropriedade);
+            NovaPropriedade = new();
+            Mensagem = "Propriedade criada com sucesso!";
+            await CarregarPropriedades();
+        }
+        catch (Exception ex)
+        {
+            Mensagem = "Erro ao criar propriedade: " + ex.Message;
+        }
+    }
+
+    private async Task AdicionarTalhao(int id)
+    {
+        try
+        {
+            if (NovoTalhaoCultura.ContainsKey(id) && NovoTalhaoArea.ContainsKey(id))
+            {
+                var talhao = new TalhaoDTO 
+                { 
+                    Cultura = NovoTalhaoCultura[id], 
+                    Area = NovoTalhaoArea[id] 
+                };
+                await PropriedadesService.AdicionarTalhao(id, talhao);
+                NovoTalhaoCultura[id] = "";
+                NovoTalhaoArea[id] = 0;
+                Mensagem = "Talhão adicionado com sucesso!";
+                await CarregarPropriedades();
+            }
+        }
+        catch (Exception ex)
+        {
+            Mensagem = "Erro ao adicionar talhão: " + ex.Message;
+        }
+    }
+}

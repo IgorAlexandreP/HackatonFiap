@@ -1,0 +1,41 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+
+<PageTitle>AgroSolutions - Home</PageTitle>
+
+<div class="text-center mt-5">
+    <h1>Bem-vindo ao AgroSolutions</h1>
+    <p class="lead">Plataforma de Agricultura de Precisão para Monitoramento Inteligente</p>
+    
+    <div class="mt-4">
+        <a href="login" class="btn btn-primary btn-lg">Acessar Plataforma</a>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Gestão de Propriedades</h5>
+                    <p>Cadastre suas fazendas e talhões de forma organizada.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Monitoramento em Tempo Real</h5>
+                    <p>Receba dados de sensores de umidade, temperatura e precipitação.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Alertas Inteligentes</h5>
+                    <p>Seja notificado automaticamente sobre riscos de seca ou anomalias.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

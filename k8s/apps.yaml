@@ -1,0 +1,195 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identidade
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identidade
+  template:
+    metadata:
+      labels:
+        app: identidade
+    spec:
+      containers:
+      - name: identidade
+        image: hackatonfiap/identidade:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identidade
+spec:
+  selector:
+    app: identidade
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: propriedades
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: propriedades
+  template:
+    metadata:
+      labels:
+        app: propriedades
+    spec:
+      containers:
+      - name: propriedades
+        image: hackatonfiap/propriedades:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: propriedades
+spec:
+  selector:
+    app: propriedades
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestao
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingestao
+  template:
+    metadata:
+      labels:
+        app: ingestao
+    spec:
+      containers:
+      - name: ingestao
+        image: hackatonfiap/ingestao:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+        - name: RabbitMQ__HostName
+          value: "rabbitmq"
+        - name: RabbitMQ__UserName
+          value: "admin"
+        - name: RabbitMQ__Password
+          value: "admin"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingestao
+spec:
+  selector:
+    app: ingestao
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analise
+  template:
+    metadata:
+      labels:
+        app: analise
+    spec:
+      containers:
+      - name: analise
+        image: hackatonfiap/analise:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+        - name: RabbitMQ__HostName
+          value: "rabbitmq"
+        - name: RabbitMQ__UserName
+          value: "admin"
+        - name: RabbitMQ__Password
+          value: "admin"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analise
+spec:
+  selector:
+    app: analise
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - name: dashboard
+        image: hackatonfiap/dashboard:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+        - name: Services__Identidade
+          value: "http://identidade"
+        - name: Services__Propriedades
+          value: "http://propriedades"
+        - name: Services__Ingestao
+          value: "http://ingestao"
+        - name: Services__Analise
+          value: "http://analise"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+spec:
+  type: LoadBalancer
+  selector:
+    app: dashboard
+  ports:
+  - port: 80
+    targetPort: 8080

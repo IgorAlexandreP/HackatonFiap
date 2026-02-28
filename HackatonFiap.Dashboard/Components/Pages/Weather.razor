@@ -1,0 +1,52 @@
+@page "/weather"
+@using HackatonFiap.Dashboard.Servicos
+@inject ClimaService ClimaService
+@rendermode InteractiveServer
+
+<PageTitle>Clima na Fazenda</PageTitle>
+
+<h1>Clima Atual</h1>
+
+<p>Monitoramento climático em tempo real (via Open-Meteo API).</p>
+
+@if (carregando)
+{
+    <p><em>Carregando dados climáticos...</em></p>
+}
+else if (clima == null)
+{
+    <p><em>Não foi possível carregar os dados do clima.</em></p>
+}
+else
+{
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">São Paulo, BR</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Dados em Tempo Real</h6>
+            <p class="card-text">
+                <strong>Temperatura:</strong> @clima.CurrentWeather?.Temperature °C<br />
+                <strong>Vento:</strong> @clima.CurrentWeather?.WindSpeed km/h<br />
+                <strong>Código:</strong> @clima.CurrentWeather?.WeatherCode
+            </p>
+            <button class="btn btn-primary" @onclick="CarregarClima">Atualizar</button>
+        </div>
+    </div>
+}
+
+@code {
+    private PrevisaoClima? clima;
+    private bool carregando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarClima();
+    }
+
+    private async Task CarregarClima()
+    {
+        carregando = true;
+        // Coordenadas de São Paulo para exemplo
+        clima = await ClimaService.ObterPrevisao(-23.5505, -46.6333);
+        carregando = false;
+    }
+}
